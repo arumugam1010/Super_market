@@ -1,15 +1,18 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   TrendingUp,
   Package,
   Users,
   ShoppingCart,
   AlertTriangle,
-  DollarSign
+  DollarSign,
+  Eye
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { format, startOfDay, endOfDay, startOfMonth, endOfMonth } from 'date-fns';
 import { useCountAnimation } from '../../hooks/useAnimation';
+import { BillView } from '../Billing/BillView';
+import { Bill, Customer } from '../../types';
 
 export default function Dashboard() {
   const {
@@ -19,6 +22,9 @@ export default function Dashboard() {
     getLowStockProducts,
     getExpiringProducts
   } = useApp();
+
+  const [selectedBill, setSelectedBill] = useState<Bill | null>(null);
+  const [showBillView, setShowBillView] = useState(false);
 
   // Calculate today's sales
   const today = new Date();
@@ -183,12 +189,24 @@ export default function Dashboard() {
                       {format(new Date(`${bill.date}T${bill.time}`), 'MMM d, yyyy - h:mm a')}
                     </p>
                   </div>
-                  <div className="text-right">
-                    <p className="font-semibold text-gray-900">₹{bill.totalAmount.toLocaleString()}</p>
-                    <p className="text-sm text-gray-600">{bill.items.length} items</p>
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                      {bill.paymentMode.toUpperCase()}
-                    </span>
+                  <div className="text-right flex items-center space-x-2">
+                    <div>
+                      <p className="font-semibold text-gray-900">₹{bill.totalAmount.toLocaleString()}</p>
+                      <p className="text-sm text-gray-600">{bill.items.length} items</p>
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        {bill.paymentMode.toUpperCase()}
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setSelectedBill(bill);
+                        setShowBillView(true);
+                      }}
+                      className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                      title="View Bill"
+                    >
+                      <Eye className="w-4 h-4" />
+                    </button>
                   </div>
                 </div>
               ))}
@@ -201,6 +219,19 @@ export default function Dashboard() {
           )}
         </div>
       </div>
+
+      {/* Bill View Modal */}
+      {selectedBill && (
+        <BillView
+          bill={selectedBill}
+          customer={selectedBill.customerId ? customers.find(c => c.id === selectedBill.customerId) || null : null}
+          isOpen={showBillView}
+          onClose={() => {
+            setShowBillView(false);
+            setSelectedBill(null);
+          }}
+        />
+      )}
 
         </div>
   );

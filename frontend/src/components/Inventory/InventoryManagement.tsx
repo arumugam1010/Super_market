@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { 
+import {
   RefreshCw,
   History,
   Plus,
-  Eye
+  Eye,
+  Package
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { format } from 'date-fns';
@@ -77,13 +78,7 @@ export default function InventoryManagement() {
           <p className="text-gray-600">Manage stock and supplier purchase bills</p>
         </div>
         <div className="flex items-center space-x-2">
-          <button
-            onClick={() => setShowStockUpdate(true)}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
-          >
-            <RefreshCw className="w-4 h-4" />
-            <span>Update Stock</span>
-          </button>
+      
           <button
             onClick={() => setShowPurchaseModal(true)}
             className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2"
@@ -314,6 +309,54 @@ export default function InventoryManagement() {
           </div>
         </div>
       )}
+      {/* Product Stock List */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <h3 className="font-semibold text-gray-900 mb-4">Product Stock Management</h3>
+        {products.length === 0 ? (
+          <div className="text-center py-8 text-gray-500">
+            <Package className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+            <p>No products available</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {products.map((product) => (
+              <div key={product.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div className="flex-1">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="font-medium text-gray-900">{product.name}</p>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      product.stockQuantity <= product.minStockLevel
+                        ? 'bg-red-100 text-red-800'
+                        : product.stockQuantity <= product.minStockLevel * 2
+                        ? 'bg-yellow-100 text-yellow-800'
+                        : 'bg-green-100 text-green-800'
+                    }`}>
+                      Stock: {product.stockQuantity}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm text-gray-600">
+                    <span>Batch: {product.batchNo}</span>
+                    <span>Min Stock: {product.minStockLevel}</span>
+                    <span>Selling Price: ₹{product.sellingPrice}</span>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2 ml-4">
+                  <button
+                    onClick={() => {
+                      setSelectedProduct(product);
+                      setShowStockUpdate(true);
+                    }}
+                    className="px-3 py-1 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    Edit Stock
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
       {/* Purchase Bills List */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <h3 className="font-semibold text-gray-900 mb-4">Supplier Purchase Bills</h3>
@@ -371,20 +414,7 @@ export default function InventoryManagement() {
             )}
 
             <form onSubmit={(e) => { e.preventDefault(); handleStockUpdate(); }} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Transaction Type
-                </label>
-                <select
-                  value={stockUpdateData.type}
-                  onChange={(e) => setStockUpdateData({...stockUpdateData, type: e.target.value as any})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="adjustment">Stock Adjustment</option>
-                  <option value="purchase">Purchase Entry</option>
-                  <option value="return">Customer Return</option>
-                </select>
-              </div>
+        
 
               {!selectedProduct && (
                 <div>

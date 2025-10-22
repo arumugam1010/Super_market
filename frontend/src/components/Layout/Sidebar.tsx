@@ -1,18 +1,19 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { BarChart3, ShoppingCart, Package, Building2, Users, DollarSign, TrendingUp } from 'lucide-react';
 
 const Sidebar: React.FC = () => {
   const location = useLocation();
 
   const menuItems = [
-    { path: '/', label: 'Dashboard', icon: '📊' },
-    { path: '/products', label: 'Products', icon: '🛒' },
-    { path: '/inventory', label: 'Inventory', icon: '📦' },
-    { path: '/suppliers', label: 'Suppliers', icon: '👥' },
-    { path: '/customers', label: 'Customers', icon: '👥' },
-    { path: '/billing', label: 'Billing', icon: '💰' },
+    { path: '/', label: 'Dashboard', icon: BarChart3 },
+    { path: '/products', label: 'Products', icon: ShoppingCart },
+    { path: '/inventory', label: 'Inventory', icon: Package },
+    { path: '/suppliers', label: 'Suppliers', icon: Building2 },
+    { path: '/customers', label: 'Customers', icon: Users },
+    { path: '/billing', label: 'Billing', icon: DollarSign },
     // { path: '/sales-return', label: 'Sales Return', icon: '🔄' },
-    { path: '/reports', label: 'Reports', icon: '📈' },
+    { path: '/reports', label: 'Reports', icon: TrendingUp },
   ];
 
   return (
@@ -35,7 +36,7 @@ const Sidebar: React.FC = () => {
                       : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
                   }`}
                 >
-                  <span className="mr-3 text-base">{item.icon}</span>
+                  <item.icon className="mr-3 w-5 h-5" />
                   <span className="text-sm">{item.label}</span>
                 </Link>
               </li>

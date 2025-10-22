@@ -65,7 +65,7 @@ export const BillView: React.FC<BillViewProps> = ({
             
             {bill.items.map((item, index) => (
               <div key={index} className="grid grid-cols-4 gap-2 py-1">
-                <div>{item.medicineName}</div>
+                <div>{item.productName}</div>
                 <div className="text-center">{item.quantity}</div>
                 <div className="text-center">₹{item.sellingPrice.toFixed(2)}</div>
                 <div className="text-right">₹{(item.sellingPrice * item.quantity).toFixed(2)}</div>
@@ -82,7 +82,7 @@ export const BillView: React.FC<BillViewProps> = ({
               
               {returnItems.map((item, index) => (
                 <div key={index} className="grid grid-cols-4 gap-2 py-1 text-red-600">
-                  <div>{item.medicineName}</div>
+                  <div>{item.productName}</div>
                   <div className="text-center">-{item.quantity}</div>
                   <div className="text-center">₹{item.sellingPrice.toFixed(2)}</div>
                   <div className="text-right">-₹{Math.abs(item.total).toFixed(2)}</div>
