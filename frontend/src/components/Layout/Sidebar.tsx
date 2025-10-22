@@ -6,12 +6,12 @@ const Sidebar: React.FC = () => {
 
   const menuItems = [
     { path: '/', label: 'Dashboard', icon: '📊' },
-    { path: '/medicines', label: 'Medicines', icon: '💊' },
+    { path: '/products', label: 'Products', icon: '🛒' },
     { path: '/inventory', label: 'Inventory', icon: '📦' },
     { path: '/suppliers', label: 'Suppliers', icon: '👥' },
     { path: '/customers', label: 'Customers', icon: '👥' },
     { path: '/billing', label: 'Billing', icon: '💰' },
-    { path: '/sales-return', label: 'Sales Return', icon: '🔄' },
+    // { path: '/sales-return', label: 'Sales Return', icon: '🔄' },
     { path: '/reports', label: 'Reports', icon: '📈' },
   ];
 
@@ -19,7 +19,7 @@ const Sidebar: React.FC = () => {
     <div className="w-60 bg-white shadow-lg h-screen fixed left-0 top-0 border-r border-gray-200 z-10">
       <div className="p-4">
         <div className="mb-6">
-          <h2 className="text-xl font-bold text-gray-800">Pharmacy</h2>
+          <h2 className="text-xl font-bold text-gray-800">Supermarket</h2>
           <p className="text-xs text-gray-500 mt-1">Management System</p>
         </div>
         

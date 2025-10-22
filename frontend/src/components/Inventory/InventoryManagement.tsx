@@ -9,9 +9,9 @@ import { useApp } from '../../context/AppContext';
 import { format } from 'date-fns';
 
 export default function InventoryManagement() {
-  const { 
-    medicines, 
-    updateMedicine,
+  const {
+    products,
+    updateProduct,
     addStockTransaction,
     suppliers,
     purchases,
@@ -19,7 +19,7 @@ export default function InventoryManagement() {
   } = useApp();
 
   const [showStockUpdate, setShowStockUpdate] = useState(false);
-  const [selectedMedicine, setSelectedMedicine] = useState<any>(null);
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [stockUpdateData, setStockUpdateData] = useState({
     type: 'adjustment' as 'adjustment' | 'purchase' | 'return',
     quantity: 0
@@ -32,30 +32,30 @@ export default function InventoryManagement() {
     invoiceNo: '',
     date: new Date().toISOString().split('T')[0],
     items: [
-      { medicineId: '', quantity: 0, purchasePrice: 0 }
-    ] as Array<{ medicineId: string; quantity: number; purchasePrice: number }>
+      { productId: '', quantity: 0, purchasePrice: 0 }
+    ] as Array<{ productId: string; quantity: number; purchasePrice: number }>
   });
 
   const handleStockUpdate = () => {
-    if (!selectedMedicine || stockUpdateData.quantity === 0) {
-      useApp().showError('Please select a medicine and enter quantity', 'Validation Error');
+    if (!selectedProduct || stockUpdateData.quantity === 0) {
+      useApp().showError('Please select a product and enter quantity', 'Validation Error');
       return;
     }
 
-    const newStock = selectedMedicine.stockQuantity + stockUpdateData.quantity;
+    const newStock = selectedProduct.stockQuantity + stockUpdateData.quantity;
     if (newStock < 0) {
       useApp().showError('Cannot reduce stock below zero', 'Stock Error');
       return;
     }
 
-    // Update medicine stock
-    updateMedicine(selectedMedicine.id, { stockQuantity: newStock });
+    // Update product stock
+    updateProduct(selectedProduct.id, { stockQuantity: newStock });
 
     // Add stock transaction
     addStockTransaction({
       type: stockUpdateData.type,
-      medicineId: selectedMedicine.id,
-      medicineName: selectedMedicine.name,
+      productId: selectedProduct.id,
+      productName: selectedProduct.name,
       quantity: stockUpdateData.quantity,
       date: new Date().toISOString().split('T')[0],
       reference: `ADJ-${Date.now()}`,
@@ -63,8 +63,8 @@ export default function InventoryManagement() {
 
     // Reset form
     setShowStockUpdate(false);
-    setSelectedMedicine(null);
-    
+    setSelectedProduct(null);
+
     useApp().showSuccess('Stock updated successfully!');
   };
 
@@ -117,19 +117,19 @@ export default function InventoryManagement() {
               if (!purchaseForm.invoiceNo) {
                 return useApp().showError('Please enter invoice number', 'Validation Error');
               }
-              if (purchaseForm.items.length === 0 || purchaseForm.items.some(i => !i.medicineId || i.quantity <= 0 || i.purchasePrice <= 0)) {
+              if (purchaseForm.items.length === 0 || purchaseForm.items.some(i => !i.productId || i.quantity <= 0 || i.purchasePrice <= 0)) {
                 return useApp().showError('Please add at least one valid item', 'Validation Error');
               }
 
               const items = purchaseForm.items.map(i => {
-                const med = medicines.find(m => m.id === i.medicineId)!;
+                const prod = products.find(p => p.id === i.productId)!;
                 return {
-                  medicineId: med.id,
-                  medicineName: med.name,
+                  productId: prod.id,
+                  productName: prod.name,
                   quantity: i.quantity,
                   purchasePrice: i.purchasePrice,
-                  batchNo: med.batchNo,
-                  expiryDate: med.expiryDate
+                  batchNo: prod.batchNo || '',
+                  expiryDate: prod.expiryDate || ''
                 };
               });
 
@@ -144,7 +144,7 @@ export default function InventoryManagement() {
               });
 
               setShowPurchaseModal(false);
-              setPurchaseForm({ supplierId: '', invoiceNo: '', date: new Date().toISOString().split('T')[0], items: [{ medicineId: '', quantity: 0, purchasePrice: 0 }] });
+              setPurchaseForm({ supplierId: '', invoiceNo: '', date: new Date().toISOString().split('T')[0], items: [{ productId: '', quantity: 0, purchasePrice: 0 }] });
               useApp().showSuccess('Purchase bill added');
             }} className="space-y-5">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -189,7 +189,7 @@ export default function InventoryManagement() {
                   <label className="block text-sm font-medium text-gray-700">Items</label>
                   <button
                     type="button"
-                    onClick={() => setPurchaseForm({ ...purchaseForm, items: [...purchaseForm.items, { medicineId: '', quantity: 0, purchasePrice: 0 }] })}
+                    onClick={() => setPurchaseForm({ ...purchaseForm, items: [...purchaseForm.items, { productId: '', quantity: 0, purchasePrice: 0 }] })}
                     className="text-blue-600 text-sm hover:underline flex items-center"
                   >
                     <Plus className="w-4 h-4 mr-1" /> Add Item
@@ -199,18 +199,18 @@ export default function InventoryManagement() {
                   {purchaseForm.items.map((item, idx) => (
                     <div key={idx} className="grid grid-cols-1 md:grid-cols-3 gap-3">
                       <select
-                        value={item.medicineId}
+                        value={item.productId}
                         onChange={(e) => {
                           const items = [...purchaseForm.items];
-                          items[idx] = { ...items[idx], medicineId: e.target.value };
+                          items[idx] = { ...items[idx], productId: e.target.value };
                           setPurchaseForm({ ...purchaseForm, items });
                         }}
                         className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                         required
                       >
                         <option value="">Item name</option>
-                        {medicines.map(m => (
-                          <option key={m.id} value={m.id}>{m.name}</option>
+                        {products.map(p => (
+                          <option key={p.id} value={p.id}>{p.name}</option>
                         ))}
                       </select>
                       <input
@@ -352,21 +352,21 @@ export default function InventoryManagement() {
           <div className="bg-white rounded-lg max-w-md w-full p-6">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-semibold text-gray-900">Update Stock</h2>
-              <button
-                onClick={() => {
-                  setShowStockUpdate(false);
-                  setSelectedMedicine(null);
-                }}
-                className="text-gray-600 hover:text-gray-900"
-              >
-                ×
-              </button>
+            <button
+              onClick={() => {
+                setShowStockUpdate(false);
+                setSelectedProduct(null);
+              }}
+              className="text-gray-600 hover:text-gray-900"
+            >
+              ×
+            </button>
             </div>
 
-            {selectedMedicine && (
+            {selectedProduct && (
               <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-                <p className="font-medium">{selectedMedicine.name}</p>
-                <p className="text-sm text-gray-600">Current Stock: {selectedMedicine.stockQuantity} units</p>
+                <p className="font-medium">{selectedProduct.name}</p>
+                <p className="text-sm text-gray-600">Current Stock: {selectedProduct.stockQuantity} units</p>
               </div>
             )}
 
@@ -386,24 +386,24 @@ export default function InventoryManagement() {
                 </select>
               </div>
 
-              {!selectedMedicine && (
+              {!selectedProduct && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Select Medicine
+                    Select Product
                   </label>
                   <select
-                    value={selectedMedicine?.id || ''}
+                    value={selectedProduct?.id || ''}
                     onChange={(e) => {
-                      const medicine = medicines.find(m => m.id === e.target.value);
-                      if (medicine) setSelectedMedicine(medicine);
+                      const product = products.find(p => p.id === e.target.value);
+                      if (product) setSelectedProduct(product);
                     }}
-                    className="w-full px-3 py-2 border border-gra y-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                     required
                   >
-                    <option value="">Select a medicine</option>
-                    {medicines.map(medicine => (
-                      <option key={medicine.id} value={medicine.id}>
-                        {medicine.name} - {medicine.batchNo} (Stock: {medicine.stockQuantity})
+                    <option value="">Select a product</option>
+                    {products.map(product => (
+                      <option key={product.id} value={product.id}>
+                        {product.name} - {product.batchNo} (Stock: {product.stockQuantity})
                       </option>
                     ))}
                   </select>
@@ -427,7 +427,7 @@ export default function InventoryManagement() {
                   type="button"
                   onClick={() => {
                     setShowStockUpdate(false);
-                    setSelectedMedicine(null);
+                    setSelectedProduct(null);
                   }}
                   className="flex-1 px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300"
                 >

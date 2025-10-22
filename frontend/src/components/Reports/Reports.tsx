@@ -1,9 +1,9 @@
-import React, { useState, useMemo } from 'react';
-import { 
-  BarChart3, 
-  TrendingUp, 
-  Calendar, 
-  Download, 
+import { useState, useMemo } from 'react';
+import {
+  BarChart3,
+  TrendingUp,
+  Calendar,
+  Download,
   Filter,
   DollarSign,
   Package,
@@ -12,13 +12,13 @@ import {
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, LineElement, Title, Tooltip, Legend, ArcElement, PointElement } from 'chart.js';
-import { Bar, Line, Doughnut } from 'react-chartjs-2';
-import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, subDays } from 'date-fns';
+import { Bar, Doughnut } from 'react-chartjs-2';
+import { startOfMonth, endOfMonth, startOfWeek, endOfWeek } from 'date-fns';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, LineElement, PointElement, Title, Tooltip, Legend, ArcElement);
 
 export default function Reports() {
-  const { bills, medicines, customers, getLowStockMedicines, getExpiringMedicines } = useApp();
+  const { bills, products, getLowStockProducts, getExpiringProducts } = useApp();
   const [reportType, setReportType] = useState<'sales' | 'gst' | 'profit' | 'inventory'>('sales');
   const [dateRange, setDateRange] = useState<'today' | 'week' | 'month' | 'custom'>('month');
   const [customStartDate, setCustomStartDate] = useState('');
@@ -114,10 +114,10 @@ export default function Reports() {
 
     filteredBills.forEach(bill => {
       bill.items.forEach(item => {
-        const medicine = medicines.find(m => m.id === item.medicineId);
-        if (medicine) {
+        const product = products.find(p => p.id === item.productId);
+        if (product) {
           totalRevenue += item.total;
-          totalCost += medicine.purchasePrice * item.quantity;
+          totalCost += product.purchasePrice * item.quantity;
         }
       });
     });
@@ -131,30 +131,30 @@ export default function Reports() {
       grossProfit,
       profitMargin
     };
-  }, [filteredBills, medicines]);
+  }, [filteredBills, products]);
 
   // Inventory Status
   const inventoryData = useMemo(() => {
-    const totalMedicines = medicines.length;
-    const lowStockCount = getLowStockMedicines().length;
-    const expiringCount = getExpiringMedicines(30).length;
-    const totalStockValue = medicines.reduce((sum, med) => sum + (med.stockQuantity * med.sellingPrice), 0);
+    const totalProducts = products.length;
+    const lowStockCount = getLowStockProducts().length;
+    const expiringCount = getExpiringProducts(30).length;
+    const totalStockValue = products.reduce((sum, prod) => sum + (prod.stockQuantity * prod.sellingPrice), 0);
 
     // Category wise stock
     const categoryStock: { [key: string]: number } = {};
-    medicines.forEach(med => {
-      const category = med.category || 'Other';
-      categoryStock[category] = (categoryStock[category] || 0) + med.stockQuantity;
+    products.forEach(prod => {
+      const category = prod.category || 'Other';
+      categoryStock[category] = (categoryStock[category] || 0) + prod.stockQuantity;
     });
 
     return {
-      totalMedicines,
+      totalProducts,
       lowStockCount,
       expiringCount,
       totalStockValue,
       categoryStock
     };
-  }, [medicines, getLowStockMedicines, getExpiringMedicines]);
+  }, [products, getLowStockProducts, getExpiringProducts]);
 
   // Chart configurations
   const salesChartData = {
@@ -374,8 +374,8 @@ export default function Reports() {
               <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-600">Total Medicines</p>
-                    <p className="text-2xl font-bold text-blue-600">{inventoryData.totalMedicines}</p>
+                    <p className="text-sm text-gray-600">Total Products</p>
+                    <p className="text-2xl font-bold text-blue-600">{inventoryData.totalProducts}</p>
                   </div>
                   <Package className="w-8 h-8 text-blue-500" />
                 </div>

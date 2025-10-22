@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { PurchaseEntry, Medicine as MedicineType } from '../../types';
+import { PurchaseEntry, Product as ProductType } from '../../types';
 import { X } from 'lucide-react';
 
 interface SalesReturnModalProps {
@@ -9,10 +9,10 @@ interface SalesReturnModalProps {
 }
 
 const SalesReturnModal: React.FC<SalesReturnModalProps> = ({ isOpen, onClose }) => {
-  const { medicines, purchases, addStockTransaction, updateMedicine, addBill, showSuccess, showError } = useApp();
+  const { products, purchases, addStockTransaction, updateProduct, addBill, showSuccess, showError } = useApp();
   const [activeTab, setActiveTab] = useState<'purchase' | 'customer'>('purchase');
   const [selectedPurchase, setSelectedPurchase] = useState<string>('');
-  const [selectedMedicine, setSelectedMedicine] = useState<string>('');
+  const [selectedProduct, setSelectedProduct] = useState<string>('');
   const [returnQuantity, setReturnQuantity] = useState<number>(0);
   const [returnReason, setReturnReason] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -33,19 +33,19 @@ const SalesReturnModal: React.FC<SalesReturnModalProps> = ({ isOpen, onClose }) 
       }
 
       // Update stock for each item in the purchase
-      purchase.items.forEach((item: { medicineId: string; medicineName: string; quantity: number }) => {
-        const medicine = medicines.find((m: MedicineType) => m.id === item.medicineId);
-        if (medicine) {
-          updateMedicine(item.medicineId, {
-            stockQuantity: medicine.stockQuantity - item.quantity
+      purchase.items.forEach((item: { productId: string; productName: string; quantity: number }) => {
+        const product = products.find((p: ProductType) => p.id === item.productId);
+        if (product) {
+          updateProduct(item.productId, {
+            stockQuantity: product.stockQuantity - item.quantity
           });
         }
 
         // Add stock transaction for return
         addStockTransaction({
           type: 'return',
-          medicineId: item.medicineId,
-          medicineName: item.medicineName,
+          productId: item.productId,
+          productName: item.productName,
           quantity: -returnQuantity,
           date: new Date().toISOString().split('T')[0],
           reference: `RET-${purchase.invoiceNo}`,
@@ -58,8 +58,8 @@ const SalesReturnModal: React.FC<SalesReturnModalProps> = ({ isOpen, onClose }) 
         date: new Date().toISOString().split('T')[0],
         time: new Date().toLocaleTimeString(),
         items: purchase.items.map(item => ({
-          medicineId: item.medicineId,
-          medicineName: item.medicineName,
+          productId: item.productId,
+          productName: item.productName,
           batchNo: item.batchNo,
           quantity: returnQuantity,
           mrp: item.purchasePrice,
@@ -91,35 +91,35 @@ const SalesReturnModal: React.FC<SalesReturnModalProps> = ({ isOpen, onClose }) 
   };
 
   const handleCustomerReturn = () => {
-    if (!selectedMedicine || returnQuantity <= 0) {
-      showError('Please select a medicine and enter valid quantity');
+    if (!selectedProduct || returnQuantity <= 0) {
+      showError('Please select a product and enter valid quantity');
       return;
     }
 
     setIsSubmitting(true);
     
     try {
-      const medicine = medicines.find((m: MedicineType) => m.id === selectedMedicine);
-      if (!medicine) {
-        showError('Medicine not found');
+      const product = products.find((p: ProductType) => p.id === selectedProduct);
+      if (!product) {
+        showError('Product not found');
         return;
       }
 
-      if (medicine.stockQuantity < returnQuantity) {
+      if (product.stockQuantity < returnQuantity) {
         showError('Insufficient stock for return');
         return;
       }
 
-      // Update medicine stock
-      updateMedicine(selectedMedicine, {
-        stockQuantity: medicine.stockQuantity + returnQuantity
+      // Update product stock
+      updateProduct(selectedProduct, {
+        stockQuantity: product.stockQuantity + returnQuantity
       });
 
       // Add stock transaction for customer return
       addStockTransaction({
         type: 'return',
-        medicineId: selectedMedicine,
-        medicineName: medicine.name,
+        productId: selectedProduct,
+        productName: product.name,
         quantity: returnQuantity,
         date: new Date().toISOString().split('T')[0],
         reference: 'CUST-RET',
@@ -132,20 +132,20 @@ const SalesReturnModal: React.FC<SalesReturnModalProps> = ({ isOpen, onClose }) 
         date: new Date().toISOString().split('T')[0],
         time: new Date().toLocaleTimeString(),
         items: [{
-          medicineId: selectedMedicine,
-          medicineName: medicine.name,
-          batchNo: medicine.batchNo,
+          productId: selectedProduct,
+          productName: product.name,
+          batchNo: product.batchNo || '',
           quantity: returnQuantity,
-          mrp: medicine.mrp,
-          sellingPrice: medicine.sellingPrice,
+          mrp: product.purchasePrice,
+          sellingPrice: product.sellingPrice,
           discount: 0,
           gstRate: 0,
-          total: returnQuantity * medicine.sellingPrice,
+          total: returnQuantity * product.sellingPrice,
         }],
-        subtotal: returnQuantity * medicine.sellingPrice,
+        subtotal: returnQuantity * product.sellingPrice,
         totalDiscount: 0,
         gstAmount: 0,
-        totalAmount: returnQuantity * medicine.sellingPrice,
+        totalAmount: returnQuantity * product.sellingPrice,
         paymentMode: 'cash' as const,
         paidAmount: 0,
         changeAmount: 0,
@@ -155,7 +155,7 @@ const SalesReturnModal: React.FC<SalesReturnModalProps> = ({ isOpen, onClose }) 
       addBill(newBill);
 
       showSuccess('Customer return processed successfully');
-      setSelectedMedicine('');
+      setSelectedProduct('');
       setReturnQuantity(0);
       setReturnReason('');
     } catch (error) {
@@ -267,17 +267,17 @@ const SalesReturnModal: React.FC<SalesReturnModalProps> = ({ isOpen, onClose }) 
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Select Medicine
+                Select Product
               </label>
               <select
-                value={selectedMedicine}
-                onChange={(e) => setSelectedMedicine(e.target.value)}
+                value={selectedProduct}
+                onChange={(e) => setSelectedProduct(e.target.value)}
                 className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
               >
-                <option value="">Select a medicine</option>
-                {medicines.map((medicine) => (
-                  <option key={medicine.id} value={medicine.id}>
-                    {medicine.name} - {medicine.batchNo} (Stock: {medicine.stockQuantity})
+                <option value="">Select a product</option>
+                {products.map((product) => (
+                  <option key={product.id} value={product.id}>
+                    {product.name} - {product.batchNo || 'N/A'} (Stock: {product.stockQuantity})
                   </option>
                 ))}
               </select>

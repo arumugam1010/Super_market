@@ -1,18 +1,18 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
-import { User, Medicine, Customer, Supplier, Bill, StockTransaction, PurchaseEntry, Notification } from '../types';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { User, Product, Customer, Supplier, Bill, BillItem, StockTransaction, PurchaseEntry } from '../types';
 
 interface AppContextType {
   // Auth
   currentUser: User | null;
   login: (username: string, password: string) => boolean;
   logout: () => void;
-  
-  // Medicines
-  medicines: Medicine[];
-  addMedicine: (medicine: Omit<Medicine, 'id'>) => void;
-  updateMedicine: (id: string, medicine: Partial<Medicine>) => void;
-  deleteMedicine: (id: string) => void;
-  getMedicine: (id: string) => Medicine | undefined;
+
+  // Products
+  products: Product[];
+  addProduct: (product: Omit<Product, 'id'>) => void;
+  updateProduct: (id: string, product: Partial<Product>) => void;
+  deleteProduct: (id: string) => void;
+  getProduct: (id: string) => Product | undefined;
   
   // Customers
   customers: Customer[];
@@ -42,8 +42,8 @@ interface AppContextType {
   
   // Utilities
   generateBillNumber: () => string;
-  getLowStockMedicines: () => Medicine[];
-  getExpiringMedicines: (days: number) => Medicine[];
+  getLowStockProducts: () => Product[];
+  getExpiringProducts: (days: number) => Product[];
   
   // Notifications
   showNotification: (type: 'success' | 'error' | 'warning' | 'info', title: string, message: string) => void;
@@ -59,42 +59,36 @@ const defaultUsers: User[] = [
   { id: '1', username: 'admin', password: 'admin123', role: 'admin', name: 'Admin User', email: 'admin@medishop.com' }
 ];
 
-const defaultMedicines: Medicine[] = [
+const defaultProducts: Product[] = [
   {
     id: '1',
-    name: 'Paracetamol 500mg',
-    tabletName: 'Crocin',
-    batchNo: 'PC001',
-    manufacturer: 'PharmaCorp',
-    expiryDate: '2025-12-31',
-    hsnCode: '30049099',
+    name: 'Rice 5kg',
+    brand: 'Premium Rice',
+    category: 'Groceries',
     barcode: '1234567890123',
-    mrp: 25.00,
-    purchasePrice: 18.00,
-    sellingPrice: 22.00,
+    purchasePrice: 180.00,
+    sellingPrice: 220.00,
     stockQuantity: 150,
     minStockLevel: 50,
     addedDate: '2024-01-15',
-    category: 'Pain Relief',
-    tabName: 'Tab 1'
+    expiryDate: '2025-12-31',
+    batchNo: 'RC001',
+    hsnCode: '10061000'
   },
   {
     id: '2',
-    name: 'Amoxicillin 250mg',
-    tabletName: 'Amoxil',
-    batchNo: 'AMX002',
-    manufacturer: 'MediLab',
-    expiryDate: '2025-06-30',
-    hsnCode: '30042000',
+    name: 'Cooking Oil 1L',
+    brand: 'Pure Oil',
+    category: 'Groceries',
     barcode: '2345678901234',
-    mrp: 85.00,
     purchasePrice: 65.00,
     sellingPrice: 78.00,
     stockQuantity: 75,
     minStockLevel: 30,
     addedDate: '2024-01-20',
-    category: 'Antibiotic',
-    tabName: 'Tab 2'
+    expiryDate: '2025-06-30',
+    batchNo: 'OL002',
+    hsnCode: '15071000'
   }
 ];
 
@@ -111,7 +105,7 @@ interface AppProviderProps {
 
 export function AppProvider({ children, notificationFunctions }: AppProviderProps) {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [medicines, setMedicines] = useState<Medicine[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [bills, setBills] = useState<Bill[]>([]);
@@ -126,11 +120,11 @@ export function AppProvider({ children, notificationFunctions }: AppProviderProp
       setCurrentUser(JSON.parse(savedUser));
     }
 
-    const savedMedicines = localStorage.getItem('medicines');
-    if (savedMedicines) {
-      setMedicines(JSON.parse(savedMedicines));
+    const savedProducts = localStorage.getItem('products');
+    if (savedProducts) {
+      setProducts(JSON.parse(savedProducts));
     } else {
-      setMedicines(defaultMedicines);
+      setProducts(defaultProducts);
     }
 
     const savedCustomers = localStorage.getItem('customers');
@@ -161,8 +155,8 @@ export function AppProvider({ children, notificationFunctions }: AppProviderProp
 
   // Save to localStorage whenever data changes
   useEffect(() => {
-    localStorage.setItem('medicines', JSON.stringify(medicines));
-  }, [medicines]);
+    localStorage.setItem('products', JSON.stringify(products));
+  }, [products]);
 
   useEffect(() => {
     localStorage.setItem('customers', JSON.stringify(customers));
@@ -199,21 +193,21 @@ export function AppProvider({ children, notificationFunctions }: AppProviderProp
     localStorage.removeItem('currentUser');
   };
 
-  const addMedicine = (medicine: Omit<Medicine, 'id'>) => {
-    const newMedicine = { ...medicine, id: Date.now().toString() };
-    setMedicines(prev => [...prev, newMedicine]);
+  const addProduct = (product: Omit<Product, 'id'>) => {
+    const newProduct = { ...product, id: Date.now().toString() };
+    setProducts(prev => [...prev, newProduct]);
   };
 
-  const updateMedicine = (id: string, updates: Partial<Medicine>) => {
-    setMedicines(prev => prev.map(m => m.id === id ? { ...m, ...updates } : m));
+  const updateProduct = (id: string, updates: Partial<Product>) => {
+    setProducts(prev => prev.map(p => p.id === id ? { ...p, ...updates } : p));
   };
 
-  const deleteMedicine = (id: string) => {
-    setMedicines(prev => prev.filter(m => m.id !== id));
+  const deleteProduct = (id: string) => {
+    setProducts(prev => prev.filter(p => p.id !== id));
   };
 
-  const getMedicine = (id: string) => {
-    return medicines.find(m => m.id === id);
+  const getProduct = (id: string) => {
+    return products.find(p => p.id === id);
   };
 
   const addCustomer = (customer: Omit<Customer, 'id' | 'registrationDate' | 'totalPurchases'>) => {
@@ -268,18 +262,18 @@ export function AppProvider({ children, notificationFunctions }: AppProviderProp
     };
     setBills(prev => [...prev, newBill]);
 
-    // Update medicine stock (subtract sold items)
+    // Update product stock (subtract sold items)
     bill.items.forEach(item => {
-      updateMedicine(item.medicineId, {
-        stockQuantity: (getMedicine(item.medicineId)?.stockQuantity || 0) - item.quantity
+      updateProduct(item.productId, {
+        stockQuantity: (getProduct(item.productId)?.stockQuantity || 0) - item.quantity
       });
     });
 
-    // Update medicine stock (add back returned items)
+    // Update product stock (add back returned items)
     if (bill.returnItems) {
       bill.returnItems.forEach(item => {
-        updateMedicine(item.medicineId, {
-          stockQuantity: (getMedicine(item.medicineId)?.stockQuantity || 0) + item.quantity
+        updateProduct(item.productId, {
+          stockQuantity: (getProduct(item.productId)?.stockQuantity || 0) + item.quantity
         });
       });
     }
@@ -298,8 +292,8 @@ export function AppProvider({ children, notificationFunctions }: AppProviderProp
     bill.items.forEach(item => {
       addStockTransaction({
         type: 'sale',
-        medicineId: item.medicineId,
-        medicineName: item.medicineName,
+        productId: item.productId,
+        productName: item.productName,
         quantity: -item.quantity,
         date: bill.date,
         reference: bill.billNumber
@@ -311,8 +305,8 @@ export function AppProvider({ children, notificationFunctions }: AppProviderProp
       bill.returnItems.forEach(item => {
         addStockTransaction({
           type: 'return',
-          medicineId: item.medicineId,
-          medicineName: item.medicineName,
+          productId: item.productId,
+          productName: item.productName,
           quantity: item.quantity,
           date: bill.date,
           reference: `RETURN-${bill.billNumber}`,
@@ -343,20 +337,20 @@ export function AppProvider({ children, notificationFunctions }: AppProviderProp
 
     setBills(prev => prev.map(b => b.id === billId ? updatedBill : b));
 
-    // Update medicine stock (add back returned quantities)
+    // Update product stock (add back returned quantities)
     returnItems.forEach(item => {
-      const medicine = getMedicine(item.medicineId);
-      if (medicine) {
-        updateMedicine(item.medicineId, {
-          stockQuantity: medicine.stockQuantity + item.quantity
+      const product = getProduct(item.productId);
+      if (product) {
+        updateProduct(item.productId, {
+          stockQuantity: product.stockQuantity + item.quantity
         });
       }
 
       // Add stock transaction for return
       addStockTransaction({
         type: 'return',
-        medicineId: item.medicineId,
-        medicineName: item.medicineName,
+        productId: item.productId,
+        productName: item.productName,
         quantity: item.quantity,
         date: new Date().toISOString().split('T')[0],
         reference: `RETURN-${bill.billNumber}`,
@@ -380,19 +374,19 @@ export function AppProvider({ children, notificationFunctions }: AppProviderProp
     };
     setPurchases(prev => [...prev, newPurchase]);
 
-    // Update medicine stock
+    // Update product stock
     purchase.items.forEach(item => {
-      const medicine = getMedicine(item.medicineId);
-      if (medicine) {
-        updateMedicine(item.medicineId, {
-          stockQuantity: medicine.stockQuantity + item.quantity
+      const product = getProduct(item.productId);
+      if (product) {
+        updateProduct(item.productId, {
+          stockQuantity: product.stockQuantity + item.quantity
         });
       }
 
       addStockTransaction({
         type: 'purchase',
-        medicineId: item.medicineId,
-        medicineName: item.medicineName,
+        productId: item.productId,
+        productName: item.productName,
         quantity: item.quantity,
         date: purchase.date,
         reference: purchase.invoiceNo
@@ -400,16 +394,17 @@ export function AppProvider({ children, notificationFunctions }: AppProviderProp
     });
   };
 
-  const getLowStockMedicines = (): Medicine[] => {
-    return medicines.filter(m => m.stockQuantity <= m.minStockLevel);
+  const getLowStockProducts = (): Product[] => {
+    return products.filter(p => p.stockQuantity <= p.minStockLevel);
   };
 
-  const getExpiringMedicines = (days: number): Medicine[] => {
+  const getExpiringProducts = (days: number): Product[] => {
     const futureDate = new Date();
     futureDate.setDate(futureDate.getDate() + days);
-    
-    return medicines.filter(m => {
-      const expiryDate = new Date(m.expiryDate);
+
+    return products.filter(p => {
+      if (!p.expiryDate) return false;
+      const expiryDate = new Date(p.expiryDate);
       return expiryDate <= futureDate && expiryDate >= new Date();
     });
   };
@@ -459,11 +454,11 @@ export function AppProvider({ children, notificationFunctions }: AppProviderProp
     currentUser,
     login,
     logout,
-    medicines,
-    addMedicine,
-    updateMedicine,
-    deleteMedicine,
-    getMedicine,
+    products,
+    addProduct,
+    updateProduct,
+    deleteProduct,
+    getProduct,
     customers,
     addCustomer,
     updateCustomer,
@@ -481,8 +476,8 @@ export function AppProvider({ children, notificationFunctions }: AppProviderProp
     purchases,
     addPurchase,
     generateBillNumber,
-    getLowStockMedicines,
-    getExpiringMedicines,
+    getLowStockProducts,
+    getExpiringProducts,
     showNotification,
     showSuccess,
     showError,

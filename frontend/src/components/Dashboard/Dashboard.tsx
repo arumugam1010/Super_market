@@ -1,32 +1,24 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  TrendingUp, 
-  Package, 
-  Users, 
-  ShoppingCart, 
+import React from 'react';
+import {
+  TrendingUp,
+  Package,
+  Users,
+  ShoppingCart,
   AlertTriangle,
-  Calendar,
-  DollarSign,
-  BarChart3
+  DollarSign
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { format, startOfDay, endOfDay, startOfMonth, endOfMonth } from 'date-fns';
-import { useCountAnimation, useAnimation } from '../../hooks/useAnimation';
+import { useCountAnimation } from '../../hooks/useAnimation';
 
 export default function Dashboard() {
-  const { 
-    bills, 
-    medicines, 
-    customers, 
-    getLowStockMedicines, 
-    getExpiringMedicines,
-    currentUser 
+  const {
+    bills,
+    products,
+    customers,
+    getLowStockProducts,
+    getExpiringProducts
   } = useApp();
-
-  // Get current date and time
-  const currentDate = new Date();
-  const formattedDate = format(currentDate, 'EEEE, MMMM d, yyyy');
-  const formattedTime = format(currentDate, 'h:mm a');
 
   // Calculate today's sales
   const today = new Date();
@@ -43,12 +35,12 @@ export default function Dashboard() {
   const monthlySales = monthlyBills.reduce((sum, bill) => sum + bill.totalAmount, 0);
 
   // Get alerts
-  const lowStockMedicines = getLowStockMedicines();
-  const expiringMedicines = getExpiringMedicines(30);
+  const lowStockProducts = getLowStockProducts();
+  const expiringProducts = getExpiringProducts(30);
 
   const animatedTodaysSales = useCountAnimation(todaysSales);
   const animatedMonthlySales = useCountAnimation(monthlySales);
-  const animatedMedicinesCount = useCountAnimation(medicines.length);
+  const animatedProductsCount = useCountAnimation(products.length);
   const animatedCustomersCount = useCountAnimation(customers.length);
 
   const stats = [
@@ -69,9 +61,9 @@ export default function Dashboard() {
       bgColor: 'bg-blue-100'
     },
     {
-      title: "Total Medicines",
-      value: animatedMedicinesCount.toString(),
-      change: `${lowStockMedicines.length} low stock`,
+      title: "Total Products",
+      value: animatedProductsCount.toString(),
+      change: `${lowStockProducts.length} low stock`,
       icon: Package,
       color: 'text-purple-600',
       bgColor: 'bg-purple-100'
@@ -97,7 +89,7 @@ export default function Dashboard() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Dashboard Overview</h2>
-          <p className="text-gray-600">Your pharmacy management summary</p>
+          <p className="text-gray-600">Your supermarket management summary</p>
         </div>
       </div>
 
@@ -131,41 +123,41 @@ export default function Dashboard() {
           </h3>
           
           <div className="space-y-4">
-            {lowStockMedicines.length > 0 && (
+            {lowStockProducts.length > 0 && (
               <div className="bg-red-50 border border-red-200 rounded-lg p-4">
                 <h4 className="font-medium text-red-800">Low Stock Alert</h4>
                 <p className="text-sm text-red-600 mt-1">
-                  {lowStockMedicines.length} medicines are running low
+                  {lowStockProducts.length} products are running low
                 </p>
                 <div className="mt-2 space-y-1">
-                  {lowStockMedicines.slice(0, 3).map(med => (
-                    <p key={med.id} className="text-xs text-red-700">
-                      {med.name} - {med.stockQuantity} left
-                    </p>
-                  ))}
-                </div>
-              </div>
-            )}
-            
-            {expiringMedicines.length > 0 && (
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                <h4 className="font-medium text-yellow-800">Expiry Alert</h4>
-                <p className="text-sm text-yellow-600 mt-1">
-                  {expiringMedicines.length} medicines expiring within 30 days
-                </p>
-                <div className="mt-2 space-y-1">
-                  {expiringMedicines.slice(0, 3).map(med => (
-                    <p key={med.id} className="text-xs text-yellow-700">
-                      {med.name} - Expires {format(new Date(med.expiryDate), 'MMM d, yyyy')}
+                  {lowStockProducts.slice(0, 3).map(prod => (
+                    <p key={prod.id} className="text-xs text-red-700">
+                      {prod.name} - {prod.stockQuantity} left
                     </p>
                   ))}
                 </div>
               </div>
             )}
 
-            {lowStockMedicines.length === 0 && expiringMedicines.length === 0 && (
+            {expiringProducts.length > 0 && (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <h4 className="font-medium text-yellow-800">Expiry Alert</h4>
+                <p className="text-sm text-yellow-600 mt-1">
+                  {expiringProducts.length} products expiring within 30 days
+                </p>
+                <div className="mt-2 space-y-1">
+                  {expiringProducts.slice(0, 3).map(prod => (
+                    <p key={prod.id} className="text-xs text-yellow-700">
+                      {prod.name} - Expires {format(new Date(prod.expiryDate!), 'MMM d, yyyy')}
+                    </p>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {lowStockProducts.length === 0 && expiringProducts.length === 0 && (
               <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <p className="text-green-700 text-sm">All medicines are well-stocked and not expiring soon!</p>
+                <p className="text-green-700 text-sm">All products are well-stocked and not expiring soon!</p>
               </div>
             )}
           </div>

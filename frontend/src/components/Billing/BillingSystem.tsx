@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { Medicine, Customer, Bill, BillItem } from '../../types';
+import { Product, Customer, Bill, BillItem } from '../../types';
 import { Search, Plus, Minus, ShoppingCart, User, Receipt, Eye, History, FileText, PlusCircle, RotateCcw } from 'lucide-react';
 import { generatePDF } from '../../utils/pdfGenerator';
 import { ReturnModal } from './ReturnModal';
 import { BillView } from './BillView';
 
 export const BillingSystem: React.FC = () => {
-  const { medicines, customers, bills, addBill, addCustomer, addReturnToBill } = useApp();
+  const { products, customers, bills, addBill, addCustomer } = useApp();
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>({
     id: 'walk-in',
     name: 'Walk-in Customer',
@@ -26,7 +26,6 @@ export const BillingSystem: React.FC = () => {
   const [showPreview, setShowPreview] = useState(false);
   const [showBillConfirmation, setShowBillConfirmation] = useState(false);
   const [currentBill, setCurrentBill] = useState<Bill | null>(null);
-  const [showBillView, setShowBillView] = useState(false);
   const [selectedBill, setSelectedBill] = useState<Bill | null>(null);
   const [showCustomerHistory, setShowCustomerHistory] = useState(false);
   const [showReturnModal, setShowReturnModal] = useState(false);
@@ -38,50 +37,46 @@ export const BillingSystem: React.FC = () => {
   });
   const [isCreatingBill, setIsCreatingBill] = useState(false);
 
-  const filteredMedicines = medicines.filter(medicine =>
-    medicine.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    medicine.tabletName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    medicine.batchNo.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredProducts = products.filter(product =>
+    product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    product.brand?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    product.batchNo?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const addToBill = (medicine: Medicine) => {
-    const existingItem = billItems.find(item => item.medicineId === medicine.id);
+  const addToBill = (product: Product) => {
+    const existingItem = billItems.find(item => item.productId === product.id);
     if (existingItem) {
       setBillItems(billItems.map(item =>
-        item.medicineId === medicine.id
+        item.productId === product.id
           ? { ...item, quantity: item.quantity + 1 }
           : item
       ));
     } else {
       setBillItems([...billItems, {
-        medicineId: medicine.id,
-        medicineName: medicine.name,
-        batchNo: medicine.batchNo,
+        productId: product.id,
+        productName: product.name,
+        batchNo: product.batchNo || '',
         quantity: 1,
-        mrp: medicine.mrp,
-        sellingPrice: medicine.sellingPrice,
+        mrp: product.sellingPrice,
+        sellingPrice: product.sellingPrice,
         discount: 0,
         gstRate: 18,
-        total: medicine.sellingPrice
+        total: product.sellingPrice
       }]);
     }
   };
 
-  const updateQuantity = (medicineId: string, quantity: number) => {
+  const updateQuantity = (productId: string, quantity: number) => {
     if (quantity <= 0) {
-      setBillItems(billItems.filter(item => item.medicineId !== medicineId));
+      setBillItems(billItems.filter(item => item.productId !== productId));
     } else {
       setBillItems(billItems.map(item =>
-        item.medicineId === medicineId ? { ...item, quantity } : item
+        item.productId === productId ? { ...item, quantity } : item
       ));
     }
   };
 
-  const updateItemDiscount = (medicineId: string, discountPercentage: number) => {
-    setBillItems(billItems.map(item =>
-      item.medicineId === medicineId ? { ...item, discountPercentage } : item
-    ));
-  };
+
 
   const calculateItemTotal = (item: BillItem) => {
     const subtotal = item.sellingPrice * item.quantity;
@@ -180,16 +175,16 @@ export const BillingSystem: React.FC = () => {
   };
 
   const getCustomerHistory = () => {
-    if (!selectedCustomer) return { bills: [], medicines: [] };
-    
+    if (!selectedCustomer) return { bills: [], products: [] };
+
     const customerBills = bills.filter(bill => bill.customerId === selectedCustomer.id);
-    const purchasedMedicines = customerBills.flatMap(bill => bill.items);
-    
-    return { bills: customerBills, medicines: purchasedMedicines };
+    const purchasedProducts = customerBills.flatMap(bill => bill.items);
+
+    return { bills: customerBills, products: purchasedProducts };
   };
 
   const totals = calculateBillTotals();
-  const { bills: customerBills, medicines: customerMedicines } = getCustomerHistory();
+  const { bills: customerBills, products: customerProducts } = getCustomerHistory();
 
   const startNewBill = () => {
     setIsCreatingBill(true);
@@ -347,13 +342,13 @@ export const BillingSystem: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Left Panel - Medicine Selection */}
+          {/* Left Panel - Product Selection */}
           <div className="space-y-4">
             <div className="relative">
               <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
               <input
                 type="text"
-                placeholder="Search medicines by name, tablet name, or batch..."
+                placeholder="Search products by name, brand, or batch..."
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -361,24 +356,24 @@ export const BillingSystem: React.FC = () => {
             </div>
 
             <div className="max-h-96 overflow-y-auto border border-gray-200 rounded-lg">
-              {filteredMedicines.map((medicine) => (
+              {filteredProducts.map((product) => (
                 <div
-                  key={medicine.id}
+                  key={product.id}
                   className="p-3 border-b border-gray-100 hover:bg-gray-50 cursor-pointer"
-                  onClick={() => addToBill(medicine)}
+                  onClick={() => addToBill(product)}
                 >
                   <div className="flex justify-between items-center">
                     <div>
-                      <h4 className="font-medium text-gray-800">{medicine.name}</h4>
-                      {medicine.tabletName && (
-                        <p className="text-sm text-blue-600">{medicine.tabletName}</p>
+                      <h4 className="font-medium text-gray-800">{product.name}</h4>
+                      {product.brand && (
+                        <p className="text-sm text-blue-600">{product.brand}</p>
                       )}
                       <p className="text-sm text-gray-600">
-                        Batch: {medicine.batchNo} | Stock: {medicine.stockQuantity}
+                        Batch: {product.batchNo} | Stock: {product.stockQuantity}
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="font-semibold text-green-600">₹{medicine.sellingPrice}</p>
+                      <p className="font-semibold text-green-600">₹{product.sellingPrice}</p>
                       <button className="text-blue-600 hover:text-blue-800">
                         <Plus className="h-4 w-4" />
                       </button>
@@ -469,22 +464,22 @@ export const BillingSystem: React.FC = () => {
               ) : (
                 <div className="space-y-2 max-h-64 overflow-y-auto">
                   {billItems.map((item) => (
-                    <div key={item.medicineId} className="bg-white p-3 rounded-md">
+                    <div key={item.productId} className="bg-white p-3 rounded-md">
                       <div className="flex justify-between items-start mb-2">
                         <div>
-                          <h4 className="font-medium">{item.medicineName}</h4>
-                        {item.medicineName && (
-                          <p className="text-sm text-blue-600">{item.medicineName}</p>
+                        <h4 className="font-medium">{item.productName}</h4>
+                        {item.batchNo && (
+                          <p className="text-sm text-blue-600">Batch: {item.batchNo}</p>
                         )}
                         </div>
                         <p className="font-semibold">₹{calculateItemTotal(item).toFixed(2)}</p>
                       </div>
-                      
+
                       <div className="flex items-center justify-between">
                      <div className="flex items-center space-x-2">
   {/* ➖ Decrease */}
   <button
-    onClick={() => updateQuantity(item.medicineId, item.quantity - 1)}
+    onClick={() => updateQuantity(item.productId, item.quantity - 1)}
     className="p-1 bg-red-100 text-red-600 rounded hover:bg-red-200"
   >
     <Minus className="h-3 w-3" />
@@ -494,21 +489,21 @@ export const BillingSystem: React.FC = () => {
   <input
     type="number"
     value={item.quantity}
-    onChange={(e) => updateQuantity(item.medicineId, Number(e.target.value))}
+    onChange={(e) => updateQuantity(item.productId, Number(e.target.value))}
     className="w-14 text-center px-2 py-1 bg-gray-100 rounded border border-gray-300"
     min="0"
   />
 
   {/* ➕ Increase */}
   <button
-    onClick={() => updateQuantity(item.medicineId, item.quantity + 1)}
+    onClick={() => updateQuantity(item.productId, item.quantity + 1)}
     className="p-1 bg-green-100 text-green-600 rounded hover:bg-green-200"
   >
     <Plus className="h-3 w-3" />
   </button>
 </div>
 
-                     
+
                       </div>
                     </div>
                   ))}
@@ -526,10 +521,10 @@ export const BillingSystem: React.FC = () => {
                 
                 <div className="space-y-2 max-h-32 overflow-y-auto">
                   {returnItems.map((item) => (
-                    <div key={item.medicineId} className="bg-white p-3 rounded-md border border-red-200">
+                    <div key={item.productId} className="bg-white p-3 rounded-md border border-red-200">
                       <div className="flex justify-between items-center">
                         <div>
-                          <h4 className="font-medium text-red-800">{item.medicineName}</h4>
+                          <h4 className="font-medium text-red-800">{item.productName}</h4>
                           <p className="text-sm text-red-600">Qty: -{item.quantity}</p>
                         </div>
                         <p className="font-semibold text-red-600">-₹{Math.abs(item.total).toFixed(2)}</p>
@@ -683,8 +678,8 @@ export const BillingSystem: React.FC = () => {
               
               <div className="space-y-1">
                 {billItems.map(item => (
-                  <div key={item.medicineId} className="flex justify-between">
-                    <span>{item.medicineName} x{item.quantity}</span>
+                  <div key={item.productId} className="flex justify-between">
+                    <span>{item.productName} x{item.quantity}</span>
                     <span>₹{calculateItemTotal(item).toFixed(2)}</span>
                   </div>
                 ))}
@@ -780,17 +775,17 @@ export const BillingSystem: React.FC = () => {
               </div>
               
               <div>
-                <h4 className="font-medium mb-2">Previously Purchased Medicines</h4>
+                <h4 className="font-medium mb-2">Previously Purchased Products</h4>
                 <div className="space-y-2 max-h-48 overflow-y-auto">
-                  {customerMedicines.map((item, index) => (
+                  {customerProducts.map((item, index) => (
                     <div key={index} className="p-2 bg-gray-50 rounded">
-                      <p className="font-medium">{item.medicineName}</p>
+                      <p className="font-medium">{item.productName}</p>
                       <p className="text-sm text-gray-600">
                         Qty: {item.quantity} - ₹{(item.sellingPrice * item.quantity).toFixed(2)}
                       </p>
                     </div>
                   ))}
-                  {customerMedicines.length === 0 && (
+                  {customerProducts.length === 0 && (
                     <p className="text-gray-500">No previous purchases</p>
                   )}
                 </div>
@@ -822,8 +817,8 @@ export const BillingSystem: React.FC = () => {
               
               <div className="space-y-1">
                 {currentBill.items.map(item => (
-                  <div key={item.medicineId} className="flex justify-between">
-                    <span>{item.medicineName} x{item.quantity}</span>
+                  <div key={item.productId} className="flex justify-between">
+                    <span>{item.productName} x{item.quantity}</span>
                     <span>₹{(item.sellingPrice * item.quantity).toFixed(2)}</span>
                   </div>
                 ))}
@@ -869,7 +864,7 @@ export const BillingSystem: React.FC = () => {
         isOpen={showReturnModal}
         onClose={() => setShowReturnModal(false)}
         onReturn={handleReturnItems}
-        medicines={medicines}
+        products={products}
       />
 
       {/* Bill View Modal */}

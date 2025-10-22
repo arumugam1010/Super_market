@@ -4,8 +4,7 @@ import { useApp } from '../../context/AppContext';
 import NotificationBell from '../Notifications/NotificationBell';
 
 export default function Header() {
-  const { currentUser, getLowStockMedicines, getExpiringMedicines, logout } = useApp();
-  const alertsCount = getLowStockMedicines().length + getExpiringMedicines(30).length;
+  const { currentUser, logout } = useApp();
 
   return (
     <header className="bg-white shadow-sm border-b border-gray-200">
@@ -16,7 +15,7 @@ export default function Header() {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <input
               type="text"
-              placeholder="Search medicines..."
+              placeholder="Search products..."
               className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full"
             />
           </div>

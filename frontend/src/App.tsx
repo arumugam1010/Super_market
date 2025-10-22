@@ -5,7 +5,7 @@ import Login from './components/Auth/Login';
 import Sidebar from './components/Layout/Sidebar';
 import Header from './components/Layout/Header';
 import Dashboard from './components/Dashboard/Dashboard';
-import MedicineList from './components/Medicines/MedicineList';
+import ProductList from './components/Products/ProductList';
 import { BillingSystem } from './components/Billing/BillingSystem';
 import SalesReturnPage from './components/SalesReturn/SalesReturnPage';
 import CustomerList from './components/Customers/CustomerList';
@@ -31,7 +31,7 @@ function AppContent() {
           <main className="min-h-screen">
             <Routes>
               <Route path="/" element={<Dashboard />} />
-              <Route path="/medicines" element={<MedicineList />} />
+              <Route path="/products" element={<ProductList />} />
               <Route path="/billing" element={<BillingSystem />} />
               <Route path="/sales-return" element={<SalesReturnPage />} />
               <Route path="/customers" element={<CustomerList />} />

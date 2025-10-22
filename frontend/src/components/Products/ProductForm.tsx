@@ -1,80 +1,78 @@
 import React, { useState, useEffect } from 'react';
 import { X, Save, Package } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
-import { Medicine } from '../../types';
+import { Product } from '../../types';
 
-interface MedicineFormProps {
-  medicine?: Medicine | null;
+interface ProductFormProps {
+  product?: Product | null;
   onClose: () => void;
 }
 
-export default function MedicineForm({ medicine, onClose }: MedicineFormProps) {
-  const { addMedicine, updateMedicine } = useApp();
+export default function ProductForm({ product, onClose }: ProductFormProps) {
+  const { addProduct, updateProduct } = useApp();
   const [isLoading, setIsLoading] = useState(false);
 
   const [formData, setFormData] = useState({
     name: '',
-    batchNo: '',
-    manufacturer: '',
-    expiryDate: '',
-    hsnCode: '',
+    brand: '',
+    category: '',
     barcode: '',
-    mrp: '',
     purchasePrice: '',
     sellingPrice: '',
     stockQuantity: '',
     minStockLevel: '',
-    category: '',
+    expiryDate: '',
+    batchNo: '',
+    hsnCode: '',
   });
 
   useEffect(() => {
-    if (medicine) {
+    if (product) {
       setFormData({
-        name: medicine.name,
-        batchNo: medicine.batchNo,
-        manufacturer: medicine.manufacturer,
-        expiryDate: medicine.expiryDate,
-        hsnCode: medicine.hsnCode,
-        barcode: medicine.barcode || '',
-        mrp: medicine.mrp.toString(),
-        purchasePrice: medicine.purchasePrice.toString(),
-        sellingPrice: medicine.sellingPrice.toString(),
-        stockQuantity: medicine.stockQuantity.toString(),
-        minStockLevel: medicine.minStockLevel.toString(),
-        category: medicine.category || ''
+        name: product.name,
+        brand: product.brand,
+        category: product.category,
+        barcode: product.barcode || '',
+        purchasePrice: product.purchasePrice.toString(),
+        sellingPrice: product.sellingPrice.toString(),
+        stockQuantity: product.stockQuantity.toString(),
+        minStockLevel: product.minStockLevel.toString(),
+        expiryDate: product.expiryDate || '',
+        batchNo: product.batchNo || '',
+        hsnCode: product.hsnCode || '',
       });
     }
-  }, [medicine]);
+  }, [product]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      const medicineData = {
+      const productData = {
         name: formData.name,
-        batchNo: formData.batchNo,
-        manufacturer: formData.manufacturer,
-        expiryDate: formData.expiryDate,
-        hsnCode: formData.hsnCode,
+        brand: formData.brand,
+        category: formData.category,
         barcode: formData.barcode,
-        mrp: parseFloat(formData.mrp),
         purchasePrice: parseFloat(formData.purchasePrice),
         sellingPrice: parseFloat(formData.sellingPrice),
         stockQuantity: parseInt(formData.stockQuantity),
         minStockLevel: parseInt(formData.minStockLevel),
-        addedDate: medicine?.addedDate || new Date().toISOString(),
-        category: formData.category      };
+        addedDate: product?.addedDate || new Date().toISOString(),
+        expiryDate: formData.expiryDate,
+        batchNo: formData.batchNo,
+        hsnCode: formData.hsnCode,
+      };
 
-      if (medicine) {
-        updateMedicine(medicine.id, medicineData);
+      if (product) {
+        updateProduct(product.id, productData);
       } else {
-        addMedicine(medicineData);
+        addProduct(productData);
       }
 
       onClose();
     } catch (error) {
-      console.error('Error saving medicine:', error);
+      console.error('Error saving product:', error);
     } finally {
       setIsLoading(false);
     }
@@ -97,10 +95,10 @@ export default function MedicineForm({ medicine, onClose }: MedicineFormProps) {
           </div>
           <div>
             <h2 className="text-xl font-semibold text-gray-900">
-              {medicine ? 'Edit Medicine' : 'Add New Medicine'}
+              {product ? 'Edit Product' : 'Add New Product'}
             </h2>
             <p className="text-sm text-gray-600">
-              {medicine ? 'Update medicine information' : 'Enter medicine details'}
+              {product ? 'Update product information' : 'Enter product details'}
             </p>
           </div>
         </div>
@@ -118,10 +116,10 @@ export default function MedicineForm({ medicine, onClose }: MedicineFormProps) {
           {/* Basic Information */}
           <div className="space-y-4">
             <h3 className="font-medium text-gray-900">Basic Information</h3>
-            
+
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                Medicine Name *
+                Product Name *
               </label>
               <input
                 type="text"
@@ -135,14 +133,14 @@ export default function MedicineForm({ medicine, onClose }: MedicineFormProps) {
             </div>
 
             <div>
-              <label htmlFor="manufacturer" className="block text-sm font-medium text-gray-700 mb-1">
-                Manufacturer *
+              <label htmlFor="brand" className="block text-sm font-medium text-gray-700 mb-1">
+                Brand *
               </label>
               <input
                 type="text"
-                id="manufacturer"
-                name="manufacturer"
-                value={formData.manufacturer}
+                id="brand"
+                name="brand"
+                value={formData.brand}
                 onChange={handleChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 required
@@ -151,7 +149,7 @@ export default function MedicineForm({ medicine, onClose }: MedicineFormProps) {
 
             <div>
               <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">
-                Category
+                Category *
               </label>
               <select
                 id="category"
@@ -159,68 +157,17 @@ export default function MedicineForm({ medicine, onClose }: MedicineFormProps) {
                 value={formData.category}
                 onChange={handleChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                required
               >
                 <option value="">Select Category</option>
-                <option value="Pain Relief">Pain Relief</option>
-                <option value="Antibiotic">Antibiotic</option>
-                <option value="Vitamin">Vitamin</option>
-                <option value="Antiseptic">Antiseptic</option>
-                <option value="Cardiac">Cardiac</option>
-                <option value="Diabetic">Diabetic</option>
+                <option value="Groceries">Groceries</option>
+                <option value="Beverages">Beverages</option>
+                <option value="Snacks">Snacks</option>
+                <option value="Household">Household</option>
+                <option value="Personal Care">Personal Care</option>
+                <option value="Dairy">Dairy</option>
                 <option value="Other">Other</option>
               </select>
-            </div>
-
-            
-          </div>
-
-          {/* Batch & Identification */}
-          <div className="space-y-4">
-            <h3 className="font-medium text-gray-900">Batch & Identification</h3>
-            
-            <div>
-              <label htmlFor="batchNo" className="block text-sm font-medium text-gray-700 mb-1">
-                Batch Number *
-              </label>
-              <input
-                type="text"
-                id="batchNo"
-                name="batchNo"
-                value={formData.batchNo}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                required
-              />
-            </div>
-
-            <div>
-              <label htmlFor="expiryDate" className="block text-sm font-medium text-gray-700 mb-1">
-                Expiry Date *
-              </label>
-              <input
-                type="date"
-                id="expiryDate"
-                name="expiryDate"
-                value={formData.expiryDate}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                required
-              />
-            </div>
-
-            <div>
-              <label htmlFor="hsnCode" className="block text-sm font-medium text-gray-700 mb-1">
-                HSN Code *
-              </label>
-              <input
-                type="text"
-                id="hsnCode"
-                name="hsnCode"
-                value={formData.hsnCode}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                required
-              />
             </div>
 
             <div>
@@ -237,29 +184,59 @@ export default function MedicineForm({ medicine, onClose }: MedicineFormProps) {
               />
             </div>
           </div>
+
+          {/* Batch & Identification */}
+          <div className="space-y-4">
+            <h3 className="font-medium text-gray-900">Batch & Identification</h3>
+
+            <div>
+              <label htmlFor="batchNo" className="block text-sm font-medium text-gray-700 mb-1">
+                Batch Number
+              </label>
+              <input
+                type="text"
+                id="batchNo"
+                name="batchNo"
+                value={formData.batchNo}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="expiryDate" className="block text-sm font-medium text-gray-700 mb-1">
+                Expiry Date
+              </label>
+              <input
+                type="date"
+                id="expiryDate"
+                name="expiryDate"
+                value={formData.expiryDate}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="hsnCode" className="block text-sm font-medium text-gray-700 mb-1">
+                HSN Code
+              </label>
+              <input
+                type="text"
+                id="hsnCode"
+                name="hsnCode"
+                value={formData.hsnCode}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Pricing */}
           <div className="space-y-4">
             <h3 className="font-medium text-gray-900">Pricing</h3>
-            
-            <div>
-              <label htmlFor="mrp" className="block text-sm font-medium text-gray-700 mb-1">
-                MRP *
-              </label>
-              <input
-                type="number"
-                id="mrp"
-                name="mrp"
-                value={formData.mrp}
-                onChange={handleChange}
-                step="0.01"
-                min="0"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                required
-              />
-            </div>
 
             <div>
               <label htmlFor="purchasePrice" className="block text-sm font-medium text-gray-700 mb-1">
@@ -299,7 +276,7 @@ export default function MedicineForm({ medicine, onClose }: MedicineFormProps) {
           {/* Stock */}
           <div className="space-y-4">
             <h3 className="font-medium text-gray-900">Stock Information</h3>
-            
+
             <div>
               <label htmlFor="stockQuantity" className="block text-sm font-medium text-gray-700 mb-1">
                 Current Stock *
@@ -349,7 +326,7 @@ export default function MedicineForm({ medicine, onClose }: MedicineFormProps) {
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2 disabled:opacity-50"
           >
             <Save className="w-4 h-4" />
-            <span>{isLoading ? 'Saving...' : medicine ? 'Update Medicine' : 'Add Medicine'}</span>
+            <span>{isLoading ? 'Saving...' : product ? 'Update Product' : 'Add Product'}</span>
           </button>
         </div>
       </form>

@@ -7,23 +7,20 @@ export interface User {
   email?: string;
 }
 
-export interface Medicine {
+export interface Product {
   id: string;
   name: string;
-  tabletName?: string;
-  batchNo: string;
-  manufacturer: string;
-  expiryDate: string;
-  hsnCode: string;
+  brand: string;
+  category: string;
   barcode?: string;
-  mrp: number;
   purchasePrice: number;
   sellingPrice: number;
   stockQuantity: number;
   minStockLevel: number;
   addedDate: string;
-  category?: string;
-  tabName?: string;
+  expiryDate?: string;
+  batchNo?: string;
+  hsnCode?: string;
 }
 
 export interface Customer {
@@ -46,8 +43,8 @@ export interface Supplier {
 }
 
 export interface BillItem {
-  medicineId: string;
-  medicineName: string;
+  productId: string;
+  productName: string;
   batchNo: string;
   quantity: number;
   mrp: number;
@@ -82,8 +79,8 @@ export interface Bill {
 export interface StockTransaction {
   id: string;
   type: 'purchase' | 'sale' | 'return' | 'adjustment';
-  medicineId: string;
-  medicineName: string;
+  productId: string;
+  productName: string;
   quantity: number;
   date: string;
   reference: string;
@@ -96,8 +93,8 @@ export interface PurchaseEntry {
   invoiceNo: string;
   date: string;
   items: Array<{
-    medicineId: string;
-    medicineName: string;
+    productId: string;
+    productName: string;
     quantity: number;
     purchasePrice: number;
     batchNo: string;

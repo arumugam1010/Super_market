@@ -44,7 +44,7 @@ export const generatePDF = (bill: Bill, customer: Customer | null) => {
   // Bill items
   bill.items.forEach(item => {
     const itemTotal = item.sellingPrice * item.quantity;
-    doc.text(item.medicineName, 20, yPos);
+    doc.text(item.productName, 20, yPos);
     doc.text(item.quantity.toString(), 100, yPos);
     doc.text(`₹${item.sellingPrice.toFixed(2)}`, 130, yPos);
     doc.text(`₹${itemTotal.toFixed(2)}`, 170, yPos);
@@ -63,7 +63,7 @@ export const generatePDF = (bill: Bill, customer: Customer | null) => {
     returnItems.forEach(item => {
       const itemTotal = Math.abs(item.total);
       doc.setTextColor(255, 0, 0); // Red color for return items
-      doc.text(item.medicineName, 20, yPos);
+      doc.text(item.productName, 20, yPos);
       doc.text(`-${item.quantity}`, 100, yPos);
       doc.text(`₹${item.sellingPrice.toFixed(2)}`, 130, yPos);
       doc.text(`-₹${itemTotal.toFixed(2)}`, 170, yPos);

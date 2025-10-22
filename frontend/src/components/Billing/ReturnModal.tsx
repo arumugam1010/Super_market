@@ -1,68 +1,68 @@
 import React, { useState } from 'react';
-import { BillItem, Medicine } from '../../types';
+import { BillItem, Product } from '../../types';
 import { X, RotateCcw } from 'lucide-react';
 
 interface ReturnModalProps {
   isOpen: boolean;
   onClose: () => void;
   onReturn: (returnItems: BillItem[]) => void;
-  medicines: Medicine[];
+  products: Product[];
 }
 
 export const ReturnModal: React.FC<ReturnModalProps> = ({
   isOpen,
   onClose,
   onReturn,
-  medicines
+  products
 }) => {
-  const [selectedMedicine, setSelectedMedicine] = useState<string>('');
+  const [selectedProduct, setSelectedProduct] = useState<string>('');
   const [returnQuantity, setReturnQuantity] = useState<number>(1);
   const [returnItems, setReturnItems] = useState<BillItem[]>([]);
 
   const handleAddReturn = () => {
-    if (!selectedMedicine || returnQuantity <= 0) return;
+    if (!selectedProduct || returnQuantity <= 0) return;
 
-    const medicine = medicines.find(m => m.id === selectedMedicine);
-    if (!medicine) return;
+    const product = products.find(p => p.id === selectedProduct);
+    if (!product) return;
 
     // Check if return quantity doesn't exceed available stock
-    const existingReturn = returnItems.find(item => item.medicineId === selectedMedicine);
+    const existingReturn = returnItems.find(item => item.productId === selectedProduct);
     const totalReturned = existingReturn ? existingReturn.quantity + returnQuantity : returnQuantity;
-    
-    if (totalReturned > medicine.stockQuantity) {
+
+    if (totalReturned > product.stockQuantity) {
       alert('Return quantity cannot exceed available stock');
       return;
     }
 
     const returnItem: BillItem = {
-      medicineId: medicine.id,
-      medicineName: medicine.name,
-      batchNo: medicine.batchNo,
+      productId: product.id,
+      productName: product.name,
+      batchNo: product.batchNo || '',
       quantity: returnQuantity,
-      mrp: medicine.mrp,
-      sellingPrice: medicine.sellingPrice,
+      mrp: product.sellingPrice,
+      sellingPrice: product.sellingPrice,
       discount: 0,
       gstRate: 18,
-      total: -(medicine.sellingPrice * returnQuantity),
+      total: -(product.sellingPrice * returnQuantity),
       isReturn: true
     };
 
     if (existingReturn) {
-      setReturnItems(returnItems.map(item => 
-        item.medicineId === selectedMedicine 
-          ? { ...item, quantity: item.quantity + returnQuantity, total: -(medicine.sellingPrice * (item.quantity + returnQuantity)) }
+      setReturnItems(returnItems.map(item =>
+        item.productId === selectedProduct
+          ? { ...item, quantity: item.quantity + returnQuantity, total: -(product.sellingPrice * (item.quantity + returnQuantity)) }
           : item
       ));
     } else {
       setReturnItems([...returnItems, returnItem]);
     }
 
-    setSelectedMedicine('');
+    setSelectedProduct('');
     setReturnQuantity(1);
   };
 
-  const handleRemoveReturn = (medicineId: string) => {
-    setReturnItems(returnItems.filter(item => item.medicineId !== medicineId));
+  const handleRemoveReturn = (productId: string) => {
+    setReturnItems(returnItems.filter(item => item.productId !== productId));
   };
 
   const handleConfirmReturn = () => {
@@ -74,11 +74,11 @@ export const ReturnModal: React.FC<ReturnModalProps> = ({
     onClose();
   };
 
-  const getAvailableQuantity = (medicineId: string) => {
-    const medicine = medicines.find(m => m.id === medicineId);
-    const existingReturn = returnItems.find(item => item.medicineId === medicineId);
-    if (!medicine) return 0;
-    return medicine.stockQuantity - (existingReturn?.quantity || 0);
+  const getAvailableQuantity = (productId: string) => {
+    const product = products.find(p => p.id === productId);
+    const existingReturn = returnItems.find(item => item.productId === productId);
+    if (!product) return 0;
+    return product.stockQuantity - (existingReturn?.quantity || 0);
   };
 
   if (!isOpen) return null;
@@ -100,23 +100,23 @@ export const ReturnModal: React.FC<ReturnModalProps> = ({
         </div>
 
         <div className="p-4 space-y-4">
-          {/* Select Medicine */}
+          {/* Select Product */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Select Medicine
+              Select Product
             </label>
             <select
-              value={selectedMedicine}
-              onChange={(e) => setSelectedMedicine(e.target.value)}
+              value={selectedProduct}
+              onChange={(e) => setSelectedProduct(e.target.value)}
               className="w-full p-2 border border-gray-300 rounded-md"
             >
-              <option value="">Choose a medicine...</option>
-              {medicines.map(medicine => {
-                const availableQty = getAvailableQuantity(medicine.id);
+              <option value="">Choose a product...</option>
+              {products.map(product => {
+                const availableQty = getAvailableQuantity(product.id);
                 if (availableQty <= 0) return null;
                 return (
-                  <option key={medicine.id} value={medicine.id}>
-                    {medicine.name} - Stock: {availableQty} - ₹{medicine.sellingPrice}
+                  <option key={product.id} value={product.id}>
+                    {product.name} - Stock: {availableQty} - ₹{product.sellingPrice}
                   </option>
                 );
               })}
@@ -131,7 +131,7 @@ export const ReturnModal: React.FC<ReturnModalProps> = ({
             <input
               type="number"
               min="1"
-              max={selectedMedicine ? getAvailableQuantity(selectedMedicine) : 1}
+              max={selectedProduct ? getAvailableQuantity(selectedProduct) : 1}
               value={returnQuantity}
               onChange={(e) => setReturnQuantity(Number(e.target.value))}
               className="w-full p-2 border border-gray-300 rounded-md"
@@ -141,7 +141,7 @@ export const ReturnModal: React.FC<ReturnModalProps> = ({
           {/* Add Return Button */}
           <button
             onClick={handleAddReturn}
-            disabled={!selectedMedicine || returnQuantity <= 0}
+            disabled={!selectedProduct || returnQuantity <= 0}
             className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400"
           >
             Add Return Item
@@ -153,15 +153,15 @@ export const ReturnModal: React.FC<ReturnModalProps> = ({
               <h4 className="font-medium text-gray-700 mb-2">Return Items:</h4>
               <div className="space-y-2 max-h-32 overflow-y-auto">
                 {returnItems.map(item => (
-                  <div key={item.medicineId} className="flex justify-between items-center p-2 bg-red-50 rounded-md">
+                  <div key={item.productId} className="flex justify-between items-center p-2 bg-red-50 rounded-md">
                     <div>
-                      <p className="font-medium">{item.medicineName}</p>
+                      <p className="font-medium">{item.productName}</p>
                       <p className="text-sm text-red-600">Qty: -{item.quantity}</p>
                     </div>
                     <div className="text-right">
                       <p className="font-medium text-red-600">₹{Math.abs(item.total).toFixed(2)}</p>
                       <button
-                        onClick={() => handleRemoveReturn(item.medicineId)}
+                        onClick={() => handleRemoveReturn(item.productId)}
                         className="text-red-500 hover:text-red-700 text-sm"
                       >
                         Remove
